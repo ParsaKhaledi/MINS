@@ -1,7 +1,26 @@
-FROM ros:noetic-perception-focal
-COPY . /catkin_ws/src/MINS
-RUN apt update && apt install python3-catkin-tools -y
-RUN /bin/bash -c "chmod +x /opt/ros/noetic/setup.sh && source /opt/ros/noetic/setup.sh && catkin build --workspace /catkin_ws"
 
-WORKDIR /catkin_ws
-ENTRYPOINT ["/bin/bash"]
+FROM ros:noetic-ros-base
+
+SHELL ["/bin/bash", "-c"]
+
+# COPY . /catkin_ws/src/MINS
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=noetic
+WORKDIR /ws_mins
+
+RUN apt update --fix-missing && apt -y upgrade
+
+RUN apt install -y --no-install-recommends \
+    python3-catkin-tools vim git python3-catkin-tools \
+    xauth xorg openbox mesa-utils \
+    ros-$ROS_DISTRO-catkin ros-$ROS_DISTRO-pcl-ros \
+    ros-${ROS_DISTRO}-rqt* ros-${ROS_DISTRO}-rviz* \
+    ros-$ROS_DISTRO-image-geometry
+
+RUN mkdir -p ${WORKDIR}/
+
+RUN chmod +x /opt/ros/$ROS_DISTRO/setup.bash && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc && \
+    echo "${WORKDIR}/devel/setup.bash" >> ~/.bashrc
+
+# ENTRYPOINT ["/bin/bash"]
