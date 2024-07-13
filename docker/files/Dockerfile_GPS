@@ -1,0 +1,21 @@
+FROM ros:noetic-ros-base
+
+SHELL ["/bin/bash", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=noetic
+
+
+RUN apt update --fix-missing && apt -y upgrade
+
+RUN apt install -y --no-install-recommends \
+    vim python3-catkin-tools \
+    ros-$ROS_DISTRO-catkin \
+    ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-ublox*
+
+
+RUN chmod +x /opt/ros/$ROS_DISTRO/setup.bash && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
+
+RUN rm -rf /var/lib/apt/lists/*
+
+# ENTRYPOINT ["/bin/bash","-c","roslaunch ublox_gps ublox_device.launch param_file_name:=m8u_rover node_name:=gps"]
