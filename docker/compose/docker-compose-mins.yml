@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   # roscore:
-  #   image: mins:v3
+  #   image: "mins:${minsTAG:?error}"
   #   network_mode: "host"
   #   restart: always
   #   command: /bin/bash -c " \
@@ -31,7 +31,7 @@ services:
     command: /bin/bash -c "
       source /ws/devel/setup.bash && roslaunch depthai_examples stereo_inertial_node.launch \
       enableRviz:=false stereo_fps:=30 syncNN:=false \
-      enableSpatialDetection:=false depth_aligned:=false \
+      enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p \
       /stereo_inertial_publisher/imu:=/imu/data_raw"
 
   ublox:
@@ -57,8 +57,32 @@ services:
     command: /bin/bash -c "
       roslaunch ublox_gps ublox_device.launch param_file_name:=m8u_rover node_name:=gps"
 
+
+  imu_filter:
+    image: "mins:${minsTAG:?error}"
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.3"
+    depends_on:
+      # - roscore
+      - oak
+    # environment:
+    #   DISPLAY: ${DISPLAY}
+    #   "XAUTHORITY": ${XAUTH}
+    volumes:
+      # - /tmp/.X11-unix/:/tmp/.X11-unix/
+      # - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      # - ~/ws_docker/ws_mins/ROS2_simulator/.ros:/root/.ros
+      - /dev/:/dev/
+      - ~/ws_docker/ws_ublox/:/ws_ublox/
+    command: /bin/bash -c "
+      rosrun imu_filter_madgwick imu_filter_madgwick_node "
+
   rviz:
-    image: mins:v3
+    image: "mins:${minsTAG:?error}"
     tty: true
     restart: unless-stopped
     network_mode: "host"
@@ -80,7 +104,7 @@ services:
       rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
 
   rqt:
-    image: mins:v3
+    image: "mins:${minsTAG:?error}"
     tty: true
     network_mode: "host"
     # networks:
@@ -101,12 +125,12 @@ services:
       source /opt/ros/noetic/setup.bash && rqt"
 
   mins:
-    image: mins:v3
+    image: "mins:${minsTAG:?error}"
     tty: true
     network_mode: "host"
     depends_on:
       # - roscore
-      - oak
+      - imu_filter
       - ublox
     # networks:
     #   mins:
