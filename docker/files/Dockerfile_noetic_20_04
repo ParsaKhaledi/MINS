@@ -23,7 +23,7 @@ RUN mkdir -p /ws_mins/src && cd /ws_mins/src &&\
     cd .. && source /opt/ros/$ROS_DISTRO/setup.bash &&\
     catkin build 
 
-RUN chmod 777 /opt/ros/$ROS_DISTRO/setup.bash && echo "/opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+RUN chmod 777 /opt/ros/$ROS_DIS TRO/setup.bash && echo "/opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
 RUN echo "$WORKDIR/devel/setup.bash" >> ~/.bashrc
 
 # ENTRYPOINT ["/bin/bash"]
