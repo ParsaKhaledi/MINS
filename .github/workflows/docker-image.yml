@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image MINS-noetic CI
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
         with:
           # push:   ${{ github.event_name != 'pull_request' }}
           push: true
-          file: ./docker/files
+          file: ./docker/files/Dockerfile_noetic_20_04
           tags:   ${{ env.Registery }}/${{ env.ImageName }}:${{ env.ImageTag }}
           # platforms: linux/amd64,linux/arm64
           # username: ${{ secrets.DOCKER_USERNAME }}
