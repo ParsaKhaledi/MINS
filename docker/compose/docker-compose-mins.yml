@@ -27,15 +27,20 @@ services:
       - /tmp/.X11-unix/:/tmp/.X11-unix/
       - /dev:/dev/
       - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      # - ~/ws_docker/ws_mins/src/MINS/mins/launch/:/ws/src/depthai-ros/depthai_examples/launch/
 
     command: /bin/bash -c "
       source /ws/devel/setup.bash && roslaunch depthai_examples stereo_inertial_node.launch \
       enableRviz:=false stereo_fps:=30 syncNN:=false \
-      enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p \
-      /stereo_inertial_publisher/imu:=/imu/data_raw"
+      enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p "
+
+    # command: /bin/bash -c "
+    #   source /ws/devel/setup.bash && roslaunch depthai_examples oak.launch \
+    #   enableRviz:=false stereo_fps:=30 syncNN:=false \
+    #   enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p "
 
   ublox:
-    image: "ublox_ros1:v1"
+    image: "ublox_ros1:${ubloxROS1TAG:?error}"
     privileged: true
     restart: unless-stopped
     network_mode: "host"
@@ -61,7 +66,7 @@ services:
   imu_filter:
     image: "mins:${minsTAG:?error}"
     privileged: true
-    restart: unless-stopped
+    # restart: unless-stopped
     network_mode: "host"
     # networks:
     #   mins:
@@ -75,11 +80,12 @@ services:
     volumes:
       # - /tmp/.X11-unix/:/tmp/.X11-unix/
       # - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
-      # - ~/ws_docker/ws_mins/ROS2_simulator/.ros:/root/.ros
       - /dev/:/dev/
-      - ~/ws_docker/ws_ublox/:/ws_ublox/
     command: /bin/bash -c "
-      rosrun imu_filter_madgwick imu_filter_madgwick_node "
+      rosrun imu_filter_madgwick imu_filter_node \
+      _use_mag:=false _use_magnetic_field_msg:=false _publish_tf:=false _world_frame:='enu' 
+       /imu/data_raw:=/stereo_inertial_publisher/imu \
+       /imu/data:=/imu/data "
 
   rviz:
     image: "mins:${minsTAG:?error}"
@@ -101,7 +107,7 @@ services:
       - ~/ws_docker/ws_mins/:/ws_mins/
     command: /bin/bash -c "
       source /opt/ros/noetic/setup.bash && \
-      rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
+      rviz -d /ws_mins/src/mins/launch/display.rviz"
 
   rqt:
     image: "mins:${minsTAG:?error}"
@@ -131,7 +137,7 @@ services:
     depends_on:
       # - roscore
       - imu_filter
-      - ublox
+      # - ublox
     # networks:
     #   mins:
     #     ipv4_address: "10.20.10.6"
@@ -144,7 +150,7 @@ services:
       - /tmp/.X11-unix/:/tmp/.X11-unix/ 
       - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
       - /home/user/ws_docker/ws_mins/:/ws_mins/
-    command: /bin/bash -c "
+    command: /bin/bash -c " 
       source /opt/ros/noetic/setup.bash && cd /ws_mins/ && \
       if [ ! -d '/ws_mins/devel' ]; then \
       catkin build; fi && source /ws_mins/devel/setup.bash && \
