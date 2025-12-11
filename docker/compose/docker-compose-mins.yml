@@ -107,7 +107,7 @@ services:
       - ../../launch:/ws_mins/src/MINS/mins/launch
     command: /bin/bash -c "
       source /opt/ros/noetic/setup.bash && \
-      rviz -d /ws_mins/src/mins/launch/display.rviz"
+      rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
 
   rqt:
     image: "${minsRegistry}/mins_ros1:${minsTAG:?error}"
