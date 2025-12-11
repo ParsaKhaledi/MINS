@@ -1,0 +1,100 @@
+version: '3.6'
+
+services:
+  # roscore:
+  #   image: mins:v3
+  #   network_mode: "host"
+  #   restart: always
+  #   command: /bin/bash -c " \
+  #     source /opt/ros/noetic/setup.bash && \
+  #     roscore"
+
+  # rviz:
+  #   image: mins:v3
+  #   tty: true
+  #   restart: unless-stopped
+  #   network_mode: "host"
+  #   # networks:
+  #   #   mins:
+  #   #     ipv4_address: "10.20.10.4"
+  #   # depends_on:
+  #     # - roscore
+  #     # - oak
+  #     # - mins
+  #   environment:
+  #     DISPLAY: ${DISPLAY}
+  #     "XAUTHORITY": ${XAUTH}
+  #   volumes:
+  #     - /tmp/.X11-unix/:/tmp/.X11-unix/
+  #     - ~/ws_docker/ws_mins/:/ws_mins/
+  #   command: /bin/bash -c "
+  #     source /opt/ros/noetic/setup.bash && \
+  #     rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
+
+  rqt:
+    image: mins:v3
+    tty: true
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.5"
+    # restart: unless-stopped
+    # depends_on:
+      # - roscore
+      # - oak
+      # - mins
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - ~/ws_docker/ws_mins/:/ws_mins/
+    command: /bin/bash -c "
+      source /opt/ros/noetic/setup.bash && rqt"
+      
+  kalibr:
+    image: kalibr:v1
+    tty: true
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.2"
+    # depends_on:
+    #   - oak
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+      QT_X11_NO_MITSHM: 1
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /home/user/ws_docker/ws_kalibr/src:/catkin_ws/src
+      - /home/user/ws_docker/ws_kalibr/Data:/data
+      - /home/user/ws_docker/ws_mins/RosBag:/RosBag
+
+    # command: /bin/bash -c "
+    #   source /catkin_ws/devel/setup.bash && \
+    #   rosrun kalibr kalibr_calibrate_cameras \
+    #   --bag /data/oak-d_kalibr_calibration.bag \
+    #   --target /data/april_3x3.yaml \
+    #   --models pinhole-radtan pinhole-radtan \
+    #   --topics /stereo_inertial_publisher/left/image_rect /stereo_inertial_publisher/right/image_rect"
+
+    command: /bin/bash -c " sleep inf"
+      # source /catkin_ws/devel/setup.bash && \
+      # rosrun kalibr kalibr_calibrate_cameras \
+      # --bag /RosBag/oak-d_Cam_IMU_Data2 \
+      # --target /data/april_3x3.yaml \
+      # --models pinhole-radtan pinhole-radtan \
+      # --topics /stereo_inertial_publisher/left/image_rect /stereo_inertial_publisher/right/image_rect"
+
+      ## install python3-tk scipy
+
+# networks:
+#   mins:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "10.20.10.0/24"

@@ -1,0 +1,130 @@
+version: '3.6'
+
+services:
+
+  oak:
+    image: luxonis/depthai-ros:humble-latest
+    tty: true
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.2"
+    # depends_on:
+      # - roscore
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - /dev:/dev/
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      # - ~/ws_docker/ws_mins/src/MINS/mins/launch/:/ws/src/depthai-ros/depthai_examples/launch/
+
+    command: /bin/bash -c "
+      source /ws/install/setup.bash && ros2 launch depthai_examples stereo_inertial_node.launch \
+      enableRviz:=false stereo_fps:=30 syncNN:=false \
+      enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p "
+
+
+
+  imu_filter:
+    image: "vins-fusion:${minsTAG:?error}"
+    privileged: true
+    # restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.3"
+    depends_on:
+      # - roscore
+      - oak
+    # environment:
+    #   DISPLAY: ${DISPLAY}
+    #   "XAUTHORITY": ${XAUTH}
+    volumes:
+      # - /tmp/.X11-unix/:/tmp/.X11-unix/
+      # - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /dev/:/dev/
+    command: /bin/bash -c "
+      ros2 run imu_filter_madgwick imu_filter_node \
+      use_mag:=false use_magnetic_field_msg:=false publish_tf:=false world_frame:='enu' 
+       /imu/data_raw:=stereo_inertial_publisher/imu \
+       /imu/data:=/imu/data "
+
+  rviz:
+    # image: "vins-fusion:${minsTAG:?error}"
+    # tty: true
+    # restart: unless-stopped
+    # network_mode: "host"
+    # # networks:
+    # #   mins:
+    # #     ipv4_address: "10.20.10.4"
+    # depends_on:
+    #   # - roscore
+    #   - oak
+    #   - mins
+    # environment:
+    #   DISPLAY: ${DISPLAY}
+    #   "XAUTHORITY": ${XAUTH}
+    # volumes:
+    #   - /tmp/.X11-unix/:/tmp/.X11-unix/
+    #   - ~/ws_docker/ws_vins-fusion/:/ws_vins-fusion/
+    # command: /bin/bash -c "
+    #   source /opt/ros/humble/setup.bash && \
+    #   rviz -d /ws_vins-fusion/src/"
+
+  rqt:
+    image: "mins:${minsTAG:?error}"
+    tty: true
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.5"
+    # restart: unless-stopped
+    depends_on:
+      # - roscore
+      - oak
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - ~/ws_docker/ws_mins/:/ws_mins/
+    command: /bin/bash -c "
+      source /opt/ros/humble/setup.bash && rqt"
+
+  # mins:
+  #   image: "mins:${minsTAG:?error}"
+  #   tty: true
+  #   network_mode: "host"
+  #   depends_on:
+  #     # - roscore
+  #     - imu_filter
+  #     - ublox
+  #   # networks:
+  #   #   mins:
+  #   #     ipv4_address: "10.20.10.6"
+  #   restart: unless-stopped
+  #   environment:
+  #     DISPLAY: ${DISPLAY}
+  #     "XAUTHORITY": ${XAUTH}
+
+  #   volumes:
+  #     - /tmp/.X11-unix/:/tmp/.X11-unix/ 
+  #     - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+  #     - /home/user/ws_docker/ws_mins/:/ws_mins/
+  #   command: /bin/bash -c "
+  #     source /opt/ros/noetic/setup.bash && cd /ws_mins/ && \
+  #     if [ ! -d '/ws_mins/devel' ]; then \
+  #     catkin build; fi && source /ws_mins/devel/setup.bash && \
+  #     roslaunch mins subscribe.launch config:=oak-d "
+
+
+# networks:
+#   mins:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "10.20.10.0/24"

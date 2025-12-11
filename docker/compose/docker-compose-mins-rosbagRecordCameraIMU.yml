@@ -1,0 +1,119 @@
+version: '3.6'
+
+services:
+  # roscore:
+  #   image: mins:v3
+  #   network_mode: "host"
+  #   restart: always
+  #   command: /bin/bash -c " \
+  #     source /opt/ros/noetic/setup.bash && \
+  #     roscore"
+
+  oak:
+    image: luxonis/depthai-ros:noetic-latest
+    tty: true
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.2"
+    # depends_on:
+      # - roscore
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - /dev:/dev/
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+    command: /bin/bash -c "
+      source /ws/devel/setup.bash && roslaunch depthai_examples stereo_inertial_node.launch \
+      enableRviz:=false stereo_fps:=30 syncNN:=false \
+      enableSpatialDetection:=false depth_aligned:=false monoResolution:=400p "
+
+  # rviz:
+  #   image: mins:v3
+  #   tty: true
+  #   restart: unless-stopped
+  #   network_mode: "host"
+  #   # networks:
+  #   #   mins:
+  #   #     ipv4_address: "10.20.10.4"
+  #   # depends_on:
+  #     # - roscore
+  #     # - oak
+  #     # - mins
+  #   environment:
+  #     DISPLAY: ${DISPLAY}
+  #     "XAUTHORITY": ${XAUTH}
+  #   volumes:
+  #     - /tmp/.X11-unix/:/tmp/.X11-unix/
+  #     - ~/ws_docker/ws_mins/:/ws_mins/
+  #   command: /bin/bash -c "
+  #     source /opt/ros/noetic/setup.bash && \
+  #     rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
+
+  rqt:
+    image: mins:v3
+    tty: true
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.5"
+    restart: unless-stopped
+    depends_on:
+      # - roscore
+      - oak
+      # - mins
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - ~/ws_docker/ws_mins/:/ws_mins/
+    command: /bin/bash -c "
+      source /opt/ros/noetic/setup.bash && rqt"
+      
+  bag:
+    image: mins:v3
+    tty: true
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.2"
+    depends_on:
+      - oak
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - /dev:/dev/
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /home/user/ws_docker/ws_mins/:/ws_mins/
+
+    command: /bin/bash -c "sleep inf"
+      # source /opt/ros/noetic/setup.bash &&  sleep 10 && \
+      # echo "Start RosBag Record " && cd /ws_mins/RosBag/ && \
+      # rosbag record -O oak-d_Cam_IMU_Data.bag /stereo_inertial_publisher/imu /stereo_inertial_publisher/left/image_rect  /stereo_inertial_publisher/right/image_rect "
+      
+      
+      
+      # Import calibration Files from oak camera
+      # python3 -m pip install --extra-index-url https://artifacts.luxonis.com/artifactory/luxonis-python-snapshot-local/ depthai
+      # git clone https://github.com/luxonis/depthai-python
+      # python3 depthai-python/examples/calibration/calibration_reader.py
+
+
+# rosrun camera_calibration cameracalibrator.py --approximate 0.1 --size 8x6 --square 0.025 \
+# right:=/my_stereo/right/image_raw left:=/stereo_inertial_publisher/left/image_rect 
+
+# networks:
+#   mins:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "10.20.10.0/24"

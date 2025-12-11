@@ -1,0 +1,87 @@
+version: '3.6'
+
+services:
+  # roscore:
+  #   image: mins:v3
+  #   network_mode: "host"
+  #   restart: always
+  #   command: /bin/bash -c " \
+  #     source /opt/ros/noetic/setup.bash && \
+  #     roscore"
+
+  # rviz:
+  #   image: mins:v3
+  #   tty: true
+  #   restart: unless-stopped
+  #   network_mode: "host"
+  #   # networks:
+  #   #   mins:
+  #   #     ipv4_address: "10.20.10.4"
+  #   # depends_on:
+  #     # - roscore
+  #     # - oak
+  #     # - mins
+  #   environment:
+  #     DISPLAY: ${DISPLAY}
+  #     "XAUTHORITY": ${XAUTH}
+  #   volumes:
+  #     - /tmp/.X11-unix/:/tmp/.X11-unix/
+  #     - ~/ws_docker/ws_mins/:/ws_mins/
+  #   command: /bin/bash -c "
+  #     source /opt/ros/noetic/setup.bash && \
+  #     rviz -d /ws_mins/src/MINS/mins/launch/display.rviz"
+
+  rqt:
+    image: mins:v3
+    tty: true
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.5"
+    # restart: unless-stopped
+    # depends_on:
+      # - roscore
+      # - oak
+      # - mins
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - ~/ws_docker/ws_mins/:/ws_mins/
+    command: /bin/bash -c "
+      source /opt/ros/noetic/setup.bash && rqt"
+      
+  AllanVariance:
+    image: mins:v3
+    tty: true
+    privileged: true
+    restart: unless-stopped
+    network_mode: "host"
+    # networks:
+    #   mins:
+    #     ipv4_address: "10.20.10.2"
+    # depends_on:
+    #   - oak
+    environment:
+      DISPLAY: ${DISPLAY}
+      "XAUTHORITY": ${XAUTH}
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix/
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /home/user/ws_docker/ws_allanVariance/:/ws_allanVariance/
+
+    command: /bin/bash -c "
+      source /opt/ros/noetic/setup.bash && \
+      cd /ws_allanVariance && \
+      catkin build  allan_variance_ros && source /ws_allanVariance/devel/setup.bash && \
+      rosrun allan_variance_ros allan_variance /ws_allanVariance/RosBag/ /ws_allanVariance/src/allan_variance_ros/config/oak-d.yml && \
+      rosrun allan_variance_ros analysis.py --data allan_variance.csv "
+      ## install python3-tk scipy
+
+# networks:
+#   mins:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "10.20.10.0/24"
