@@ -1,0 +1,30 @@
+
+FROM ros:noetic-ros-base
+
+SHELL ["/bin/bash", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=noetic
+# ENV WORKDIR=/ws_allanVariance
+
+
+RUN apt update && apt upgrade -y
+
+RUN apt install -y --no-install-recommends \
+    python3-catkin-tools vim git python3-catkin-tools \
+    python3-tk \ 
+    xauth xorg openbox mesa-utils \
+    ros-$ROS_DISTRO-catkin  ros-$ROS_DISTRO-imu-tools* \
+    ros-${ROS_DISTRO}-rqt* ros-${ROS_DISTRO}-rviz* && \
+    pip3 install scipy
+
+RUN mkdir -p /ws_allanVariance/src && cd /ws_allanVariance/src &&\
+    git clone https://github.com/ori-drs/allan_variance_ros.git &&\
+    source /opt/ros/noetic/setyp.bash && \
+    cd .. && catkin build 
+
+
+RUN chmod 777 /opt/ros/$ROS_DISTRO/setup.bash && echo "/opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+RUN echo "/ws_allanVariance/devel/setup.bash" >> ~/.bashrc
+WORKDIR /ws_kalibr
+# ENTRYPOINT ["/bin/bash"]

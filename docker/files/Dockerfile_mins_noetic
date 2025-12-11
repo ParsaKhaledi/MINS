@@ -7,23 +7,24 @@ SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ROS_DISTRO=noetic
-WORKDIR /ws_mins
+ENV WORKDIR=/ws_mins
+WORKDIR ${WORKDIR}
 
 RUN apt update && apt upgrade -y
 
 RUN apt install -y --no-install-recommends \
     python3-catkin-tools vim git python3-catkin-tools \
     xauth xorg openbox mesa-utils \
-    ros-$ROS_DISTRO-catkin ros-$ROS_DISTRO-imu-tools ros-$ROS_DISTRO-image-geometry\
-    ros-$ROS_DISTRO-pcl-ros ros-${ROS_DISTRO}-rqt* ros-${ROS_DISTRO}-rviz* 
-    # ros-$ROS_DISTRO-depthai-ros 
+    ros-$ROS_DISTRO-catkin  ros-$ROS_DISTRO-imu-tools* ros-$ROS_DISTRO-image-geometry\
+    ros-$ROS_DISTRO-pcl-ros ros-${ROS_DISTRO}-rqt* ros-${ROS_DISTRO}-rviz*
 
-RUN mkdir -p /ws_mins/src && cd /ws_mins/src &&\
+RUN mkdir -p ${WORKDIR}/src && cd ${WORKDIR}/src &&\
     git clone https://github.com/rpng/MINS.git &&\
-    cd .. && source /opt/ros/$ROS_DISTRO/setup.bash &&\
-    catkin build 
+    cd .. && source /opt/ros/$ROS_DISTRO/setup.bash # &&\
+    # catkin build 
 
 RUN chmod 777 /opt/ros/$ROS_DISTRO/setup.bash && echo "/opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+
 RUN echo "$WORKDIR/devel/setup.bash" >> ~/.bashrc
 
 # ENTRYPOINT ["/bin/bash"]
