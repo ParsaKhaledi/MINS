@@ -1,7 +1,7 @@
 %YAML:1.0 # need to specify the file type at the top!
 
 gps:
-  enabled: false
+  enabled: true
   max_n: 1
   do_calib_ext: false
   do_calib_dt: false
@@ -15,6 +15,6 @@ gps:
   noise: 3.0
 
 gps0:
-  timeoffset: 0.45
+  timeoffset: 0.0
   pGinI: [-0.25, 0, 0]
   topic: "/gps/fix"
